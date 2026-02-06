@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TECHSTORE | الرئيسية</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+        body { font-family: 'Cairo', sans-serif; background-color: #f9fafb; }
+        .slider-img { width: 100%; height: 100%; object-fit: cover; display: none; position: absolute; }
+        .slider-img.active { display: block; animation: fade 0.8s; }
+        @keyframes fade { from {opacity: 0.5} to {opacity: 1} }
+        .cat-btn.active { background: #2563eb; color: white; border-color: #2563eb; }
+        #product-details, #cart-overlay { display: none; }
+    </style>
+</head>
+<body>
+
+<header class="bg-white border-b sticky top-0 z-50 p-4 shadow-sm">
+    <div class="container mx-auto flex justify-between items-center">
+        <div class="flex items-center gap-2 cursor-pointer" onclick="location.reload()">
+            <div class="bg-blue-600 p-2 rounded-lg text-white shadow-lg"><i class="fa fa-bolt"></i></div>
+            <h1 class="text-2xl font-black tracking-tighter">TECH<span class="text-blue-600">STORE</span></h1>
+        </div>
+        <div class="flex-1 max-w-md mx-4 relative hidden md:block">
+            <input id="search-bar" oninput="search()" placeholder="بتدور على إيه؟" class="w-full border-2 border-gray-100 p-2 rounded-full px-6 outline-none focus:border-blue-500 transition-all">
+        </div>
+        <div class="flex gap-5 items-center">
+            <div onclick="openCart()" class="relative cursor-pointer group">
+                <i class="fa fa-shopping-bag text-2xl group-hover:text-blue-600 transition"></i>
+                <span id="cart-count" class="absolute -top-2 -right-2 bg-red-600 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold">0</span>
+            </div>
+        </div>
+    </div>
+</header>
+
+<nav class="bg-white border-b overflow-x-auto whitespace-nowrap p-3">
+    <div class="container mx-auto flex gap-3">
+        <button onclick="filter('الكل', this)" class="cat-btn active px-5 py-2 rounded-full border text-sm font-bold transition-all">الكل</button>
+        <button onclick="filter('موبايلات', this)" class="cat-btn px-5 py-2 rounded-full border text-sm font-bold transition-all">موبايلات</button>
+        <button onclick="filter('لابتوبات', this)" class="cat-btn px-5 py-2 rounded-full border text-sm font-bold transition-all">لابتوبات</button>
+        <button onclick="filter('سماعات', this)" class="cat-btn px-5 py-2 rounded-full border text-sm font-bold transition-all">سماعات</button>
+        <button onclick="filter('ساعات', this)" class="cat-btn px-5 py-2 rounded-full border text-sm font-bold transition-all">ساعات</button>
+        <button onclick="filter('شواحن', this)" class="cat-btn px-5 py-2 rounded-full border text-sm font-bold transition-all">شواحن</button>
+        <button onclick="filter('أيباد', this)" class="cat-btn px-5 py-2 rounded-full border text-sm font-bold transition-all">أيباد</button>
+        <button onclick="filter('شاشات', this)" class="cat-btn px-5 py-2 rounded-full border text-sm font-bold transition-all">شاشات</button>
+    </div>
+</nav>
+
+<section class="container mx-auto mt-4 px-4">
+    <div id="ad-slider" class="relative rounded-3xl overflow-hidden shadow-xl h-48 md:h-[400px] bg-gray-200"></div>
+</section>
+
+<main class="container mx-auto p-4 py-12">
+    <div id="grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6"></div>
+</main>
+
+<div id="product-details" class="fixed inset-0 z-[60] bg-black bg-opacity-70 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white w-full max-w-4xl rounded-3xl p-6 md:p-10 relative max-h-[90vh] overflow-y-auto">
+        <button onclick="closeDetails()" class="absolute top-5 right-5 text-3xl font-bold">&times;</button>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <div>
+                <img id="det-main-img" class="w-full h-80 object-contain rounded-2xl bg-gray-50 p-4 border mb-4">
+                <div id="det-gallery" class="flex gap-2 overflow-x-auto pb-2"></div>
+            </div>
+            <div class="text-right">
+                <h2 id="det-name" class="text-3xl font-black mb-4"></h2>
+                <div id="det-price" class="text-2xl font-bold text-blue-600 mb-6"></div>
+                <p id="det-desc" class="text-gray-600 mb-8 leading-relaxed"></p>
+                <button id="add-btn-action" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-xl shadow-lg hover:bg-black transition-all">إضافة للسلة الآن</button>
+                <div class="mt-10 border-t pt-6">
+                    <h3 class="font-bold mb-4">آراء العملاء ⭐</h3>
+                    <div id="det-comments" class="space-y-2 mb-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="cart-overlay" class="fixed inset-0 z-[70] bg-black bg-opacity-50 flex justify-end">
+    <div class="bg-white w-full max-w-md h-full shadow-2xl p-6 flex flex-col">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-2xl font-black italic">حقيبة التسوق</h2>
+            <button onclick="closeCart()" class="text-red-500 text-2xl font-bold">×</button>
+        </div>
+        <div id="cart-list" class="flex-1 overflow-y-auto space-y-4"></div>
+        <div class="border-t pt-6 space-y-4">
+            <div class="flex justify-between text-xl font-black"><span>الإجمالي:</span> <span id="cart-total">0</span> ج.م</div>
+            <div class="bg-gray-50 p-4 rounded-2xl space-y-2">
+                <input id="c-name" placeholder="الاسم" class="w-full border p-2 rounded-lg text-sm">
+                <input id="c-phone" placeholder="رقم التليفون" class="w-full border p-2 rounded-lg text-sm">
+                <textarea id="c-addr" placeholder="العنوان بالتفصيل" class="w-full border p-2 rounded-lg text-sm h-16"></textarea>
+            </div>
+            <button onclick="confirmOrder()" class="w-full bg-green-600 text-white py-4 rounded-2xl font-black text-lg shadow-xl">تأكيد الأوردر</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const DB = "https://tech-store-71bce-default-rtdb.firebaseio.com/";
+    let products = {}, cart = [];
+
+    async function start() {
+        // Ads Slider
+        const sRes = await fetch(DB + "ads.json");
+        const sData = await sRes.json();
+        if(sData) {
+            const cont = document.getElementById('ad-slider');
+            cont.innerHTML = Object.values(sData).map((img, i) => `<img src="${img}" class="slider-img ${i===0?'active':''}">`).join('');
+            let idx = 0;
+            const imgs = document.querySelectorAll('.slider-img');
+            if(imgs.length > 1) setInterval(() => {
+                imgs[idx].classList.remove('active');
+                idx = (idx + 1) % imgs.length;
+                imgs[idx].classList.add('active');
+            }, 5000);
+        }
+
+        // Products
+        const pRes = await fetch(DB + "products.json");
+        products = await pRes.json() || {};
+        render(products);
+    }
+
+    function render(data) {
+        const grid = document.getElementById('grid');
+        grid.innerHTML = Object.keys(data).map(k => `
+            <div class="bg-white p-4 rounded-3xl shadow-sm hover:shadow-xl transition-all border border-gray-50 text-center flex flex-col justify-between group">
+                <div onclick="openDetails('${k}')" class="cursor-pointer">
+                    <img src="${data[k].mainImg}" class="h-40 w-full object-contain mb-4 group-hover:scale-105 transition">
+                    <h4 class="font-bold text-sm h-10 overflow-hidden leading-tight">${data[k].name}</h4>
+                    <div class="text-blue-600 font-black text-lg mt-2">${data[k].price} ج.م</div>
+                </div>
+                <button onclick="addToCart('${k}')" class="mt-4 bg-gray-100 hover:bg-blue-600 hover:text-white py-2 rounded-xl transition-all font-bold text-xs">إضافة للسلة</button>
+            </div>
+        `).join('');
+    }
+
+    function addToCart(id) {
+        const p = products[id];
+        cart.push({ name: p.name, price: p.price, img: p.mainImg });
+        updateCartUI();
+        alert('تمت الإضافة للسلة! ✅');
+    }
+
+    function updateCartUI() {
+        document.getElementById('cart-count').innerText = cart.length;
+        const list = document.getElementById('cart-list');
+        let total = 0;
+        list.innerHTML = cart.map((item, i) => {
+            total += parseInt(item.price);
+            return `<div class="flex gap-4 items-center bg-gray-50 p-2 rounded-xl">
+                <img src="${item.img}" class="w-12 h-12 object-cover rounded-lg">
+                <div class="flex-1 text-xs font-bold">${item.name}<br><span class="text-blue-600">${item.price} ج.م</span></div>
+                <button onclick="cart.splice(${i},1);updateCartUI()" class="text-red-500 font-bold px-2">×</button>
+            </div>`;
+        }).join('');
+        document.getElementById('cart-total').innerText = total;
+    }
+
+    function openDetails(id) {
+        const p = products[id];
+        document.getElementById('det-name').innerText = p.name;
+        document.getElementById('det-price').innerText = p.price + " ج.م";
+        document.getElementById('det-desc').innerText = p.desc || "لا يوجد وصف متوفر.";
+        document.getElementById('det-main-img').src = p.mainImg;
+        document.getElementById('add-btn-action').onclick = () => addToCart(id);
+        
+        const gal = document.getElementById('det-gallery');
+        gal.innerHTML = `<img src="${p.mainImg}" onclick="document.getElementById('det-main-img').src=this.src" class="w-16 h-16 border rounded-lg cursor-pointer">`;
+        if(p.gallery) p.gallery.forEach(img => {
+            gal.innerHTML += `<img src="${img}" onclick="document.getElementById('det-main-img').src=this.src" class="w-16 h-16 border rounded-lg cursor-pointer">`;
+        });
+        document.getElementById('product-details').style.display = 'flex';
+    }
+
+    function closeDetails() { document.getElementById('product-details').style.display = 'none'; }
+    function openCart() { document.getElementById('cart-overlay').style.display = 'flex'; }
+    function closeCart() { document.getElementById('cart-overlay').style.display = 'none'; }
+
+    async function confirmOrder() {
+        if(cart.length === 0) return alert('السلة فاضية!');
+        const order = {
+            customer: document.getElementById('c-name').value,
+            phone: document.getElementById('c-phone').value,
+            address: document.getElementById('c-addr').value,
+            items: cart,
+            total: document.getElementById('cart-total').innerText,
+            date: new Date().toLocaleString()
+        };
+        await fetch(DB + "orders.json", { method: 'POST', body: JSON.stringify(order) });
+        alert('تم تأكيد طلبك بنجاح!');
+        cart = []; location.reload();
+    }
+
+    function filter(cat, btn) {
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        if(cat === 'الكل') return render(products);
+        const filtered = Object.keys(products).filter(k => products[k].cat === cat).reduce((r, k) => (r[k] = products[k], r), {});
+        render(filtered);
+    }
+
+    start();
+</script>
+</body>
+</html>
