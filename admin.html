@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة TECHSTORE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap'); body { font-family: 'Cairo', sans-serif; }</style>
+</head>
+<body class="bg-slate-50">
+
+<div id="login" class="max-w-md mx-auto mt-20 p-8 bg-white rounded-3xl shadow-xl text-center">
+    <h2 class="text-2xl font-black mb-6">دخول الإدارة</h2>
+    <input type="password" id="p" placeholder="الرمز (11211)" class="w-full border p-3 rounded-xl mb-4 text-center">
+    <button onclick="login()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">دخول</button>
+</div>
+
+<div id="ui" class="hidden">
+    <nav class="bg-slate-900 text-white p-4 flex gap-4 overflow-x-auto sticky top-0 z-50">
+        <button onclick="sec('ads')" class="px-4 font-bold border-l">الإعلانات</button>
+        <button onclick="sec('add')" class="px-4 font-bold border-l">إضافة منتج</button>
+        <button onclick="sec('orders')" class="px-4 font-bold">الأوردرات</button>
+    </nav>
+
+    <main class="container mx-auto p-6">
+        <section id="add-sec" class="hidden max-w-xl mx-auto bg-white p-8 rounded-3xl shadow-lg">
+            <h2 class="font-black mb-6 border-b pb-2">إضافة منتج جديد</h2>
+            <div class="space-y-4">
+                <input id="p-name" placeholder="اسم المنتج" class="w-full border p-3 rounded-xl">
+                <select id="p-cat" class="w-full border p-3 rounded-xl bg-gray-50 font-bold">
+                    <option value="موبايلات">موبايلات</option>
+                    <option value="لابتوبات">لابتوبات</option>
+                    <option value="سماعات">سماعات</option>
+                    <option value="ساعات">ساعات</option>
+                    <option value="شواحن">شواحن</option>
+                    <option value="أيباد">أيباد</option>
+                    <option value="شاشات">شاشات</option>
+                    <option value="إكسسوارات">إكسسوارات</option>
+                </select>
+                <input id="p-price" type="number" placeholder="السعر" class="w-full border p-3 rounded-xl">
+                <textarea id="p-desc" placeholder="وصف المنتج التفصيلي" class="w-full border p-3 rounded-xl h-24"></textarea>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="border-2 border-dashed p-3 rounded-xl">
+                        <p class="text-xs font-bold mb-1">الصورة الأساسية:</p>
+                        <input type="file" id="p-main" class="text-[10px]">
+                    </div>
+                    <div class="border-2 border-dashed p-3 rounded-xl">
+                        <p class="text-xs font-bold mb-1">الصور الإضافية:</p>
+                        <input type="file" id="p-gal" multiple class="text-[10px]">
+                    </div>
+                </div>
+                <button id="save-btn" onclick="save()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black">حفظ ونشر</button>
+            </div>
+        </section>
+
+        <section id="ads-sec" class="hidden max-w-lg mx-auto bg-white p-6 rounded-2xl shadow">
+            <h2 class="font-black mb-4">رفع إعلان جديد للسلايدر</h2>
+            <input type="file" id="ad-file" class="w-full mb-4">
+            <button onclick="upAd()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">رفع</button>
+            <div id="ads-list" class="mt-6 grid grid-cols-3 gap-2"></div>
+        </section>
+
+        <section id="orders-sec" class="hidden">
+            <h2 class="font-black mb-6 text-2xl">طلبات العملاء</h2>
+            <div id="order-list" class="space-y-4"></div>
+        </section>
+    </main>
+</div>
+
+<script>
+    const DB = "https://tech-store-71bce-default-rtdb.firebaseio.com/";
+    let main64 = "", gal64 = [];
+
+    function login() { if(document.getElementById('p').value === "11211") { document.getElementById('login').hidden=true; document.getElementById('ui').classList.remove('hidden'); sec('add'); } }
+    function sec(s) { document.querySelectorAll('main > section').forEach(x => x.classList.add('hidden')); document.getElementById(s + '-sec').classList.remove('hidden'); if(s==='orders') loadOrders(); if(s==='ads') loadAds(); }
+
+    document.getElementById('p-main').onchange = e => { const r = new FileReader(); r.onload = () => main64 = r.result; r.readAsDataURL(e.target.files[0]); };
+    document.getElementById('p-gal').onchange = e => {
+        gal64 = [];
+        Array.from(e.target.files).forEach(f => {
+            const r = new FileReader();
+            r.onload = () => gal64.push(r.result);
+            r.readAsDataURL(f);
+        });
+    };
+
+    async function save() {
+        const btn = document.getElementById('save-btn'); btn.disabled = true;
+        const data = {
+            name: document.getElementById('p-name').value,
+            cat: document.getElementById('p-cat').value,
+            price: document.getElementById('p-price').value,
+            desc: document.getElementById('p-desc').value,
+            mainImg: main64,
+            gallery: gal64
+        };
+        await fetch(DB + "products.json", { method: 'POST', body: JSON.stringify(data) });
+        alert('تم الحفظ!'); location.reload();
+    }
+
+    async function upAd() {
+        const f = document.getElementById('ad-file').files[0];
+        const r = new FileReader();
+        r.onload = async () => {
+            await fetch(DB + "ads.json", { method: 'POST', body: JSON.stringify(r.result) });
+            loadAds();
+        };
+        r.readAsDataURL(f);
+    }
+
+    async function loadAds() {
+        const res = await fetch(DB + "ads.json");
+        const data = await res.json();
+        document.getElementById('ads-list').innerHTML = data ? Object.keys(data).map(k => `<img src="${data[k]}" class="h-20 w-full object-cover rounded">`).join('') : "";
+    }
+
+    async function loadOrders() {
+        const res = await fetch(DB + "orders.json");
+        const data = await res.json();
+        document.getElementById('order-list').innerHTML = data ? Object.keys(data).reverse().map(k => `
+            <div class="bg-white p-4 rounded-2xl shadow-sm border-r-4 border-blue-500 flex justify-between items-center">
+                <div><b>${data[k].customer}</b> (${data[k].phone})<br><span class="text-xs">${data[k].address}</span></div>
+                <div class="font-black text-blue-600">${data[k].total} ج.م</div>
+                <button onclick="del('orders/${k}')" class="text-red-500 font-bold">حذف</button>
+            </div>`).join('') : "لا يوجد أوردرات.";
+    }
+
+    async function del(path) { if(confirm('حذف؟')) { await fetch(DB + path + ".json", { method: 'DELETE' }); loadOrders(); } }
+</script>
+</body>
+</html>
